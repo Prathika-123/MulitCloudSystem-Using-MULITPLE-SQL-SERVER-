@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Details</title>
+    <style>
+        /* Base Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Container for all content */
+        .details-container {
+            background-color: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 900px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .details-container:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Section Cards */
+        .section-card {
+            background-color: #ffffff;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .section-card:hover {
+            background-color: #f7f7f7;
+            transform: translateY(-3px);
+        }
+
+        .section-card h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        .section-card button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .section-card button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Student List */
+        .student-list {
+            display: none;
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .student-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .student-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .student-item strong {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .student-item p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        /* Button styles */
+        .btn {
+            padding: 12px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .details-container {
+                padding: 20px;
+            }
+
+            .section-card h3 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="details-container">
+    <h2>Lecturer Details</h2>
+    <div id="sections-container"></div>
+    <div id="student-details" class="student-list"></div>
+    <button class="btn" id="logout-btn">Logout</button>
+</div>
+
+<script>
+    // Get the lecturer's email from the URL
+    const email = new URLSearchParams(window.location.search).get('email');
+    console.log("Lecturer Email:", email);  // Log lecturer email for debugging
+
+    // Fetch lecturer details from the backend API
+    fetch(`http://localhost:8080/api/student/lecturerDetails/${email}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Fetched Data:", data);  // Log fetched data for debugging
+            displaySectionsAndSubjects(data);
+        })
+        .catch(error => console.error('Error fetching data:', error));
+
+    // Display sections and subjects in cards
+    function displaySectionsAndSubjects(data) {
+        const sectionsContainer = document.getElementById("sections-container");
+
+        // Clear previous sections
+        sectionsContainer.innerHTML = '';
+
+        // Iterate through sections and subjects (using map2 and classToSubject)
+        Object.keys(data.map2).forEach(section => {
+            // Check if the section has subjects assigned in classToSubject
+            if (data.classToSubject[section]) {
+                data.classToSubject[section].forEach(subject => {
+                    const card = document.createElement("div");
+                    card.classList.add("section-card");
+                    card.innerHTML = `
+                        <h3>${section}: ${subject}</h3>
+                        <button class="btn" data-section="${section}" data-subject="${subject}">Show Students</button>
+                    `;
+                    sectionsContainer.appendChild(card);
+                });
+            }
+        });
+
+        // Attach event listeners to the Show Students buttons
+        const showStudentButtons = document.querySelectorAll(".section-card button");
+        showStudentButtons.forEach(button => {
+            button.addEventListener("click", (e) => {
+                const section = e.target.getAttribute("data-section");
+                const subject = e.target.getAttribute("data-subject");
+                showStudentDetails(section, subject, data.map2, data.map1, data.map);
+            });
+        });
+    }
+
+    // Show students and marks when a section+subject card is clicked
+    function showStudentDetails(section, subject, sectionToStudents, map1, map) {
+
+        const studentDetailsContainer = document.getElementById("student-details");
+
+        // Clear previous data
+        studentDetailsContainer.innerHTML = `<h3>Students in ${section} - ${subject}</h3>`;
+
+        // Get student IDs for the clicked section
+        const studentIds = sectionToStudents[section];
+        if (!studentIds || studentIds.length === 0) {
+            studentDetailsContainer.innerHTML = `<p>No students found for this section.</p>`;
+            studentDetailsContainer.style.display = 'block';
+            return;
+        }
+
+        studentIds.forEach(studentId => {
+            const studentInfo = map1[studentId];
+            if (studentInfo) {
+                const studentName = studentInfo[0];
+                const studentRollNo = studentInfo[1];
+
+                const marksData = map[studentId]?.find(mark => mark[subject] !== undefined);
+                if (marksData) {
+                    const marks = marksData[subject];
+                    const studentItem = document.createElement("div");
+                    studentItem.classList.add("student-item");
+                    studentItem.innerHTML = `
+                        <strong>Name:</strong> ${studentName} <br>
+                        <strong>Roll No:</strong> ${studentRollNo} <br>
+                        <strong>Marks:</strong> ${marks}
+                    `;
+                    studentDetailsContainer.appendChild(studentItem);
+                }
+            }
+        });
+
+        studentDetailsContainer.style.display = 'block';
+    }
+
+    // Logout function to redirect to the login page
+    document.getElementById("logout-btn").addEventListener("click", function() {
+        window.location.href = "/";
+    });
+</script>
+</body>
+</html>
