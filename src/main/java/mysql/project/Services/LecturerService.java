@@ -1,5 +1,6 @@
 package mysql.project.Services;
 
+import jakarta.transaction.Transactional;
 import lombok.NoArgsConstructor;
 import mysql.project.DTO.ChangeMark;
 import mysql.project.DTO.LecturerDetails;
@@ -95,6 +96,7 @@ public class LecturerService {
         return lecturerDetails;
     }
 
+    @Transactional //check once
     public ResponseEntity<?> changeMarks(ChangeMark changeMark){
         Marks marks=marksRepository.findByStudentIdAndSubject(changeMark.getStudentId(),changeMark.getSubject());
 
