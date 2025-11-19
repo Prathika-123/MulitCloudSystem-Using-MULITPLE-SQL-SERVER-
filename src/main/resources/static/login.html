@@ -197,7 +197,8 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.href = 'studentDetails.html?studentId=' + data.studentId;
+                // OPEN IN NEW TAB/WINDOW
+                window.open('studentDetails.html?studentId=' + data.studentId, '_blank');
             } else {
                 document.getElementById('errorMessage').textContent =
                     data.message || 'Invalid credentials';
@@ -209,5 +210,6 @@
         });
     });
 </script>
+
 </body>
 </html>
