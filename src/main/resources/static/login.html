@@ -307,7 +307,7 @@
           document.getElementById("card").appendChild(circle);
 
           setTimeout(()=>{
-            window.open('studentDetails.html?studentId='+data.studentId,'_blank');
+            window.location.href='studentDetails.html?studentId='+data.studentId;
             circle.remove();
           },1000);
         } else {
