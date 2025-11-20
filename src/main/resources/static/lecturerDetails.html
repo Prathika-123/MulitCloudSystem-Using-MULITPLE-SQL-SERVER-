@@ -198,45 +198,73 @@
         });
     }
 
-    // Show students and marks when a section+subject card is clicked
     function showStudentDetails(section, subject, sectionToStudents, map1, map) {
 
-        const studentDetailsContainer = document.getElementById("student-details");
+    // Open a new tab
+    const newTab = window.open("", "_blank");
 
-        // Clear previous data
-        studentDetailsContainer.innerHTML = `<h3>Students in ${section} - ${subject}</h3>`;
-
-        // Get student IDs for the clicked section
-        const studentIds = sectionToStudents[section];
-        if (!studentIds || studentIds.length === 0) {
-            studentDetailsContainer.innerHTML = `<p>No students found for this section.</p>`;
-            studentDetailsContainer.style.display = 'block';
-            return;
-        }
-
-        studentIds.forEach(studentId => {
-            const studentInfo = map1[studentId];
-            if (studentInfo) {
-                const studentName = studentInfo[0];
-                const studentRollNo = studentInfo[1];
-
-                const marksData = map[studentId]?.find(mark => mark[subject] !== undefined);
-                if (marksData) {
-                    const marks = marksData[subject];
-                    const studentItem = document.createElement("div");
-                    studentItem.classList.add("student-item");
-                    studentItem.innerHTML = `
-                        <strong>Name:</strong> ${studentName} <br>
-                        <strong>Roll No:</strong> ${studentRollNo} <br>
-                        <strong>Marks:</strong> ${marks}
-                    `;
-                    studentDetailsContainer.appendChild(studentItem);
+    // Prepare HTML content
+    let html = `
+        <html>
+        <head>
+            <title>Students - ${section} (${subject})</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background: #f4f4f4;
+                    padding: 20px;
                 }
-            }
-        });
+                h2 {
+                    text-align: center;
+                }
+                .student-item {
+                    background: white;
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                }
+                strong { color: #333; }
+            </style>
+        </head>
+        <body>
+            <h2>Students in ${section} - ${subject}</h2>
+    `;
 
-        studentDetailsContainer.style.display = 'block';
+    const studentIds = sectionToStudents[section];
+    if (!studentIds || studentIds.length === 0) {
+        html += `<p>No students found.</p></body></html>`;
+        newTab.document.write(html);
+        newTab.document.close();
+        return;
     }
+
+    studentIds.forEach(studentId => {
+        const studentInfo = map1[studentId];
+        if (studentInfo) {
+            const studentName = studentInfo[0];
+            const studentRollNo = studentInfo[1];
+
+            const marksData = map[studentId]?.find(mark => mark[subject] !== undefined);
+            let marks = marksData ? marksData[subject] : "N/A";
+
+            html += `
+                <div class="student-item">
+                    <strong>Name:</strong> ${studentName} <br>
+                    <strong>Roll No:</strong> ${studentRollNo} <br>
+                    <strong>Marks:</strong> ${marks}
+                </div>
+            `;
+        }
+    });
+
+    html += `</body></html>`;
+
+    // Write everything to the new tab
+    newTab.document.write(html);
+    newTab.document.close();
+}
+
 
     // Logout function to redirect to the login page
     document.getElementById("logout-btn").addEventListener("click", function() {
