@@ -18,7 +18,7 @@
           --teal: rgb(97, 192, 191);
 
           --bg-light: linear-gradient(135deg, var(--rose), var(--mint));
-          --bg-dark: linear-gradient(135deg, #1a001f, #2d0038);
+          --bg-dark: linear-gradient(135deg, #1a001f, #2d0038); /* deep purple dark */
 
           --glass-light: rgba(255, 255, 255, 0.35);
           --glass-dark: rgba(0, 0, 0, 0.5);
@@ -56,6 +56,7 @@
            =========================== */
         .student-card {
           width: 600px;
+          max-height: 80vh; /* Limit card height for scrolling */
           padding: 40px;
           border-radius: 20px;
           background: var(--glass-light);
@@ -64,23 +65,14 @@
           border: 1px solid rgba(255, 255, 255, 0.5);
           animation: fadeIn 0.7s ease, floatCard 4s ease-in-out infinite, glowPulse 3s ease-in-out infinite;
           position: relative;
+
+          overflow-y: auto; /* Enable scrolling */
+          scrollbar-width: none; /* Firefox hide scrollbar */
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(25px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes floatCard {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-12px); }
-          100% { transform: translateY(0px); }
-        }
-
-        @keyframes glowPulse {
-          0% { box-shadow: 0 0 15px rgba(255,255,255,0.15); }
-          50% { box-shadow: 0 0 35px rgba(255,255,255,0.35); }
-          100% { box-shadow: 0 0 15px rgba(255,255,255,0.15); }
+        /* Hide scrollbar for Chrome, Edge, Safari */
+        .student-card::-webkit-scrollbar {
+            display: none;
         }
 
         /* Neon border on hover */
@@ -149,7 +141,7 @@
 
         .dark .student-card {
           background: var(--glass-dark);
-          border: 1px solid rgba(187, 222, 214, 0.4);
+          border: 1px solid rgba(187, 222, 214, 0.4); /* mintish border */
           color: var(--text-light);
         }
 
@@ -161,66 +153,93 @@
           background: rgba(255, 182, 185, 0.2);
           border-left-color: var(--teal);
         }
+
+        /* Animations */
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(25px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes floatCard {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-12px); }
+          100% { transform: translateY(0px); }
+        }
+
+        @keyframes glowPulse {
+          0% { box-shadow: 0 0 15px rgba(255,255,255,0.15); }
+          50% { box-shadow: 0 0 35px rgba(255,255,255,0.35); }
+          100% { box-shadow: 0 0 15px rgba(255,255,255,0.15); }
+        }
     </style>
 </head>
 
 <body>
 
+<!-- Particle Canvas -->
 <canvas id="particles"></canvas>
-<button class="toggle" id="toggleMode">Mode</button>
+<button class="toggle" id="toggleMode">Change Mode</button>
+
+<!-- Card -->
 <div class="student-card" id="card">
     <p class="loading">Loading student details...</p>
-
 </div>
 
 <script>
     /* =============================
-       DARK MODE TOGGLE FIX
+       DARK MODE TOGGLE
        ============================= */
-    function attachToggle() {
-      const toggleBtn = document.getElementById("toggleMode");
-      if(toggleBtn){
-        toggleBtn.onclick = () => document.body.classList.toggle("dark");
-      }
-    }
-    attachToggle(); // Attach initially
+    const toggleBtn = document.getElementById("toggleMode");
+    toggleBtn.onclick = () => {
+      document.body.classList.toggle("dark");
+    };
 
     /* =============================
        FETCH STUDENT DETAILS
        ============================= */
     const urlParams = new URLSearchParams(window.location.search);
     const studentId = urlParams.get("studentId");
-    const cardContent = document.getElementById("card");
 
     if (studentId) {
       fetch(`http://localhost:8080/api/student/details/${studentId}`)
         .then(res => res.json())
         .then(student => {
-          const marksList = student.marks?.length
-            ? student.marks.map(m=>`<li><strong>${m.subject}</strong>: ${m.marks} marks (Grade: ${m.grade})</li>`).join('')
-            : `<li class="empty-message">No marks available</li>`;
+          document.getElementById("card").innerHTML = `
 
-          const lecturersList = student.lecturers?.length
-            ? student.lecturers.map(l=>`<li><strong>${l.name}</strong> — ${l.department}</li>`).join('')
-            : `<li class="empty-message">No lecturers available</li>`;
-
-          cardContent.innerHTML = `
-            <p class="loading"></p>
-            <button class="toggle" id="toggleMode">Change Mode</button>
             <h3>🎓 ${student.name || "Student"}</h3>
+
             <p><strong>Roll No:</strong> ${student.rollNo || "N/A"}</p>
             <p><strong>Gender:</strong> ${student.gender || "N/A"}</p>
             <p><strong>Section:</strong> ${student.section || "N/A"}</p>
             <p><strong>Email:</strong> ${student.email || "N/A"}</p>
 
             <h4>Marks</h4>
-            <ul>${marksList}</ul>
+            <ul>
+              ${
+                student.marks?.length
+                  ? student.marks.map(m =>
+                      `<li><strong>${m.subject}</strong>: ${m.marks} marks (Grade: ${m.grade})</li>`
+                    ).join('')
+                  : `<li class="empty-message">No marks available</li>`
+              }
+            </ul>
 
             <h4>Lecturers</h4>
-            <ul>${lecturersList}</ul>
+            <ul>
+              ${
+                student.lecturers?.length
+                  ? student.lecturers.map(l =>
+                      `<li><strong>${l.name}</strong> — ${l.department}</li>`
+                    ).join('')
+                  : `<li class="empty-message">No lecturers available</li>`
+              }
+            </ul>
           `;
 
-          attachToggle(); // Reattach toggle button after dynamic update
+          // Re-attach toggle inside card
+          document.getElementById("toggleMode").onclick = () => {
+            document.body.classList.toggle("dark");
+          };
         });
     }
 
@@ -233,25 +252,28 @@
     canvas.height = innerHeight;
 
     let particles = [];
-    for(let i=0;i<75;i++){
+    for (let i = 0; i < 75; i++) {
       particles.push({
         x: Math.random()*canvas.width,
         y: Math.random()*canvas.height,
-        r: Math.random()*3+1,
-        dx: Math.random()*0.6-0.3,
-        dy: Math.random()*0.6-0.3
+        s: Math.random()*2+1,
+        vx: Math.random()*0.6-0.3,
+        vy: Math.random()*0.6-0.3
       });
     }
 
-    function animateParticles(){
+    function animateParticles() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      particles.forEach(p=>{
-        p.x += p.dx; p.y += p.dy;
-        if(p.x<0 || p.x>canvas.width) p.dx*=-1;
-        if(p.y<0 || p.y>canvas.height) p.dy*=-1;
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
         ctx.beginPath();
-        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
         ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
         ctx.fill();
       });
       requestAnimationFrame(animateParticles);
@@ -261,5 +283,6 @@
 
 </body>
 </html>
+
 
 
