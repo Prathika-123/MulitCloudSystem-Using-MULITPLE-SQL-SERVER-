@@ -6,19 +6,13 @@
     <title>Lecturer Dashboard — Glassmorphism</title>
 
     <style>
-        /* ---------------------- ROOT COLORS ---------------------- */
         :root {
             --c1: rgb(255, 235, 178);
             --c2: rgb(233, 168, 155);
             --c3: rgb(216, 117, 199);
             --c4: rgb(145, 43, 188);
-
             --glass-bg: rgba(255, 255, 255, 0.12);
             --glass-border: rgba(255, 255, 255, 0.25);
-
-            --text-dark: #1a1a1a;
-            --text-light: #f1f1f1;
-
             --card-shadow: 0 6px 28px rgba(0, 0, 0, 0.18);
         }
 
@@ -26,14 +20,14 @@
             margin: 0;
             padding: 0;
             height: 100vh;
-            background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c4));
-            background-size: 200% 200%;
-            animation: gradientShift 18s ease infinite;
             font-family: "Poppins", sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c4));
+            background-size: 200% 200%;
+            animation: gradientShift 18s ease infinite;
         }
 
         @keyframes gradientShift {
@@ -42,7 +36,6 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* PARTICLES */
         .particle {
             position: absolute;
             width: 7px;
@@ -58,7 +51,6 @@
             transform: scale(1.55);
         }
 
-        /* MAIN GLASS CARD */
         .main-glass-card {
             width: 88%;
             max-width: 1050px;
@@ -70,19 +62,13 @@
             box-shadow: var(--card-shadow);
             padding: 30px 38px;
             position: relative;
-            animation: float 8s ease-in-out infinite, fadeIn 1.5s ease forwards;
             overflow-y: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(10px);}
-            to {opacity: 1; transform: translateY(0);}
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-7px); }
-            100% { transform: translateY(0px); }
+        .main-glass-card::-webkit-scrollbar {
+            display: none;
         }
 
         h1 {
@@ -100,7 +86,6 @@
             padding: 22px;
             margin-bottom: 25px;
             box-shadow: var(--card-shadow);
-            animation: fadeIn 1.2s ease both;
         }
 
         .section-card {
@@ -133,31 +118,6 @@
             opacity: 0.9;
         }
 
-        .student-item {
-            margin-bottom: 13px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.14);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.28);
-        }
-
-        .dark-mode {
-            background: linear-gradient(135deg, #200628, #3b1166, #5a28a1);
-            background-size: 200% 200%;
-            animation: gradientShift 12s ease infinite;
-        }
-
-        .dark-mode .main-glass-card {
-            background: rgba(0, 0, 0, 0.28);
-            border-color: rgba(255, 255, 255, 0.18);
-        }
-
-        .dark-mode h1 { color: var(--c1); }
-        .dark-mode .btn {
-            background: linear-gradient(135deg, var(--c2), var(--c3));
-            color: black;
-        }
-
         #modeToggle {
             position: absolute;
             top: 18px;
@@ -169,6 +129,16 @@
             cursor: pointer;
             box-shadow: var(--card-shadow);
         }
+
+        .student-item {
+            margin-bottom: 13px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.14);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.28);
+        }
+
+        .student-item strong { color: #1a1a1a; }
 
     </style>
 </head>
@@ -184,16 +154,10 @@
         <div id="sections-container"></div>
     </div>
 
-    <div class="inner-card">
-        <h2>Student Details</h2>
-        <div id="student-details"></div>
-    </div>
-
     <button class="btn" id="logout-btn">Logout</button>
 </div>
 
 <script>
-    // Dark mode toggle
     document.getElementById("modeToggle").onclick = () => {
         document.body.classList.toggle("dark-mode");
     };
@@ -209,7 +173,6 @@
         }
     });
 
-    // Backend fetch
     const email = new URLSearchParams(window.location.search).get('email');
 
     fetch(`http://localhost:8080/api/student/lecturerDetails/${email}`)
@@ -239,47 +202,87 @@
 
         document.querySelectorAll(".section-card button").forEach(btn => {
             btn.addEventListener("click", e => {
-                showStudentDetails(
-                    e.target.dataset.section,
-                    e.target.dataset.subject,
-                    data.map2,
-                    data.map1,
-                    data.map
-                );
+                const section = e.target.dataset.section;
+                const subject = e.target.dataset.subject;
+                showStudentDetailsInNewTab(section, subject, data.map2, data.map1, data.map);
             });
         });
     }
 
-    function showStudentDetails(section, subject, map2, map1, map) {
-        const box = document.getElementById("student-details");
-        box.innerHTML = `<h3>Students in ${section} - ${subject}</h3>`;
+    function showStudentDetailsInNewTab(section, subject, map2, map1, map) {
+        const newTab = window.open("", "_blank");
 
-        const studentIds = map2[section];
-        studentIds.forEach(id => {
-            if (map1[id]) {
-                const name = map1[id][0];
-                const roll = map1[id][1];
+        let html = `
+        <html>
+        <head>
+        <title>Students - ${section} (${subject})</title>
+        <style>
+            :root {
+                --c1: rgb(255, 235, 178);
+                --c2: rgb(233, 168, 155);
+                --c3: rgb(216, 117, 199);
+                --c4: rgb(145, 43, 188);
+                --glass-bg: rgba(255,255,255,0.12);
+                --glass-border: rgba(255,255,255,0.25);
+            }
+            body {
+                margin:0; padding:0;
+                font-family:"Poppins",sans-serif;
+                background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c4));
+                background-size:200% 200%;
+                animation: gradientShift 18s ease infinite;
+                display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden;
+            }
+            @keyframes gradientShift {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+            .main-glass-card {
+                width:88%; max-width:900px; max-height:80vh;
+                background: rgba(255,255,255,0.14); backdrop-filter: blur(18px);
+                border:1px solid rgba(255,255,255,0.25); border-radius:26px;
+                box-shadow:0 6px 28px rgba(0,0,0,0.18); padding:30px; overflow-y:auto;
+                -ms-overflow-style:none; scrollbar-width:none;
+            }
+            .main-glass-card::-webkit-scrollbar{display:none;}
+            h2 {text-align:center;color:var(--c4); margin-bottom:20px;}
+            .student-item {
+                margin-bottom:13px;
+                padding:12px;
+                background: rgba(255,255,255,0.14);
+                border-radius:12px;
+                border:1px solid rgba(255,255,255,0.28);
+            }
+            .student-item strong {color:#1a1a1a;}
+        </style>
+        </head>
+        <body>
+        <div class="main-glass-card">
+        <h2>Students in ${section} - ${subject}</h2>
+        `;
+
+        const studentIds = map2[section] || [];
+        if (!studentIds.length) html += "<p>No students found.</p>";
+        else {
+            studentIds.forEach(id => {
+                const studentInfo = map1[id]; if (!studentInfo) return;
+                const name = studentInfo[0], roll = studentInfo[1];
                 const marksObj = map[id]?.find(m => m[subject] !== undefined);
-
-                if (marksObj) {
-                    const item = document.createElement("div");
-                    item.classList.add("student-item");
-                    item.innerHTML = `
+                const marks = marksObj ? marksObj[subject] : 'N/A';
+                html += `
+                    <div class="student-item">
                         <strong>Name:</strong> ${name}<br>
                         <strong>Roll No:</strong> ${roll}<br>
-                        <strong>Marks:</strong> ${marksObj[subject]}
-                    `;
-                    box.appendChild(item);
-                }
-            }
-        });
+                        <strong>Marks:</strong> ${marks}
+                    </div>
+                `;
+            });
+        }
+
+        html += `</div></body></html>`;
+        newTab.document.write(html);
+        newTab.document.close();
     }
 
-    document.getElementById("logout-btn").onclick = () => {
-        window.location.href = "/";
-    };
+    document.getElementById("logout-btn").onclick = () => window.location.href = "/";
 </script>
 
 </body>
 </html>
-
