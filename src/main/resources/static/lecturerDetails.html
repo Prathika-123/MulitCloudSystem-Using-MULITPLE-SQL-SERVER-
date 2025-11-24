@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecturer Dashboard — Glassmorphism</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
 
     <style>
         :root {
@@ -29,6 +31,19 @@
             background-size: 200% 200%;
             animation: gradientShift 18s ease infinite;
         }
+
+       body.dark-mode {
+         background: linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+       }
+
+       body.dark-mode .main-glass-card,
+       body.dark-mode .inner-card,
+       body.dark-mode .section-card,
+       body.dark-mode .student-item{
+        background: rgba(0,0,0,0.35);
+        color: white;
+       }
+
 
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
@@ -209,117 +224,230 @@
         });
     }
 
-    function showStudentDetailsInNewTab(section, subject, map2, map1, map) {
-        const newTab = window.open("", "_blank");
+   function showStudentDetailsInNewTab(section, subject, map2, map1, map) {
+    const newTab = window.open("", "_blank");
 
-        let html = `
-        <html>
-        <head>
-        <title>Students - ${section} (${subject})</title>
-        <style>
-            :root {
-                --c1: rgb(255, 235, 178);
-                --c2: rgb(233, 168, 155);
-                --c3: rgb(216, 117, 199);
-                --c4: rgb(145, 43, 188);
-            }
-            body {
-                margin:0; padding:0;
-                font-family:"Poppins",sans-serif;
-                background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c4));
-                background-size:200% 200%;
-                animation: gradientShift 18s ease infinite;
-                display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden;
-            }
-            @keyframes gradientShift {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-            .main-glass-card {
-                width:88%; max-width:900px; max-height:80vh;
-                background: rgba(255,255,255,0.14); backdrop-filter: blur(18px);
-                border:1px solid rgba(255,255,255,0.25); border-radius:26px;
-                box-shadow:0 6px 28px rgba(0,0,0,0.18); padding:30px; overflow-y:auto;
-            }
-            .student-item {
-                margin-bottom:13px;
-                padding:12px;
-                background: rgba(255,255,255,0.14);
-                border-radius:12px;
-                border:1px solid rgba(255,255,255,0.28);
-            }
-        </style>
-        </head>
-        <body>
-        <div class="main-glass-card">
-        <h2>Students in ${section} - ${subject}</h2>
-        `;
-
-        const studentIds = map2[section] || [];
-
-        if (!studentIds.length) {
-            html += "<p>No students found.</p>";
-        } else {
-            studentIds.forEach(id => {
-                const s = map1[id];
-                if (!s) return;
-
-                const name = s[0];
-                const roll = s[1];
-
-                const marksObj = map[id]?.find(m => m[subject] !== undefined);
-                const marks = marksObj ? marksObj[subject] : 'N/A';
-
-                html += `
-                <div class="student-item">
-                    <strong>Name:</strong> ${name}<br>
-                    <strong>Roll No:</strong> ${roll}<br>
-                    <strong>Marks:</strong> <span id="mark-${id}">${marks}</span><br><br>
-
-                    <button class="btn" onclick="updateMarks(${id}, '${subject}', 'mark-${id}')">
-                        Update Marks
-                    </button>
-                </div>
-                `;
-            });
+    let html = `
+    <html>
+    <head>
+    <title>Students - ${section} (${subject})</title>
+    <style>
+        :root {
+            --c1: rgb(255, 235, 178);
+            --c2: rgb(233, 168, 155);
+            --c3: rgb(216, 117, 199);
+            --c4: rgb(145, 43, 188);
+        }
+        body {
+            margin:0;
+            padding:0;
+            font-family:"Poppins",sans-serif;
+            background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3), var(--c4));
+            background-size:200% 200%;
+            animation: gradientShift 18s ease infinite;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
         }
 
-        html += `
-        </div>
+        @keyframes gradientShift {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
 
-        <script>
-            function updateMarks(studentId, subject, markSpanId) {
-                const newMarks = prompt("Enter new marks:");
+        .main-glass-card {
+            width:88%;
+            max-width:900px;
+            max-height:80vh;
+            background: rgba(255,255,255,0.14);
+            backdrop-filter: blur(18px);
+            border-radius:26px;
+            padding:30px;
+            overflow-y:auto;
+        }
 
-                if (newMarks === null) return;
-                if (isNaN(newMarks) || newMarks < 0 || newMarks > 100) {
-                    alert("Invalid marks! Must be 0 - 100");
-                    return;
-                }
+        .student-item{
+            margin-bottom:15px;
+            padding:15px;
+            background: rgba(255,255,255,0.14);
+            border-radius:12px;
+        }
 
-                fetch("http://localhost:8080/api/student/update/marks", {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        studentId: studentId,
-                        studentMark: Number(newMarks),
-                        subject: subject
-                    })
-                })
-                .then(res => res.text())
-                .then(msg => {
-                    alert(msg);
-                    document.getElementById(markSpanId).innerText = newMarks;
-                })
-                .catch(err => alert("Error: " + err));
-            }
-        <\/script>
+        .update-btn{
+            padding:12px 25px;
+            border-radius:30px;
+            border:none;
+            background:linear-gradient(135deg,var(--c3),var(--c4));
+            color:white;
+            font-weight:700;
+            cursor:pointer;
+            transition:0.35s;
+            box-shadow:0 8px 25px rgba(145,43,188,0.45);
+        }
+        .update-btn:hover{
+            transform:translateY(-3px) scale(1.05);
+            box-shadow:0 0 20px white,0 0 40px var(--c4);
+        }
 
-        </body></html>
-        `;
+        /* MODAL */
+        .modal-bg{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.5);
+            display:none;
+            justify-content:center;
+            align-items:center;
+            z-index:999;
+        }
 
-        newTab.document.write(html);
-        newTab.document.close();
+        .modal-box{
+            width:320px;
+            padding:25px;
+            border-radius:20px;
+            background:rgba(255,255,255,0.2);
+            backdrop-filter:blur(15px);
+            text-align:center;
+        }
+
+        .modal-box input{
+            width:100%;
+            padding:12px;
+            border-radius:12px;
+            border:none;
+            margin-bottom:15px;
+        }
+
+        .btn{
+            padding:10px 18px;
+            border:none;
+            border-radius:12px;
+            background:linear-gradient(135deg,var(--c3),var(--c4));
+            color:white;
+            cursor:pointer;
+        }
+
+        .custom-alert{
+            position:fixed;
+            bottom:30px;
+            left:50%;
+            transform:translateX(-50%);
+            padding:14px 22px;
+            border-radius:18px;
+            background:linear-gradient(135deg,var(--c3),var(--c4));
+            color:white;
+            box-shadow:0 0 20px var(--c4);
+            z-index:9999;
+        }
+
+    </style>
+    </head>
+    <body>
+    <div class="main-glass-card">
+    <h2>Students in ${section} - ${subject}</h2>
+    `;
+
+    const studentIds = map2[section] || [];
+
+    if (!studentIds.length) {
+        html += "<p>No students found.</p>";
+    } else {
+        studentIds.forEach(id => {
+            const s = map1[id];
+            if (!s) return;
+
+            const name = s[0];
+            const roll = s[1];
+
+            const marksObj = map[id]?.find(m => m[subject] !== undefined);
+            const marks = marksObj ? marksObj[subject] : 'N/A';
+
+            html += `
+            <div class="student-item">
+                <strong>Name:</strong> ${name}<br>
+                <strong>Roll No:</strong> ${roll}<br>
+                <strong>Marks:</strong> <span id="mark-${id}">${marks}</span><br><br>
+
+                <button class="update-btn" onclick="openUpdateModal(${id}, '${subject}', 'mark-${id}')">
+                    Update Marks ✏️
+                </button>
+            </div>
+            `;
+        });
     }
+
+    html += `
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-bg" id="modalBg">
+        <div class="modal-box">
+            <h3>Update Marks</h3>
+            <input type="number" id="newMarkInput" placeholder="0 - 100">
+            <button class="btn" onclick="saveMarks()">Save</button>
+            <button class="btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStudent = null;
+        let currentSubject = null;
+        let currentSpan = null;
+
+        function openUpdateModal(studentId, subject, spanId){
+            currentStudent = studentId;
+            currentSubject = subject;
+            currentSpan = spanId;
+            document.getElementById("modalBg").style.display = "flex";
+        }
+
+        function closeModal(){
+            document.getElementById("modalBg").style.display = "none";
+            document.getElementById("newMarkInput").value = "";
+        }
+
+        function saveMarks(){
+            const newMarks = document.getElementById("newMarkInput").value;
+
+            if(isNaN(newMarks) || newMarks < 0 || newMarks > 100){
+                customAlert("Invalid Marks! (0-100 only)");
+                return;
+            }
+
+            fetch("http://localhost:8080/api/student/update/marks", {
+                method: "PATCH",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    studentId: currentStudent,
+                    studentMark: Number(newMarks),
+                    subject: currentSubject
+                })
+            })
+            .then(res => res.text())
+            .then(msg => {
+                customAlert(msg);
+                document.getElementById(currentSpan).innerText = newMarks;
+                closeModal();
+            })
+            .catch(err => customAlert("Error: " + err));
+        }
+
+        function customAlert(msg){
+            const alertBox = document.createElement("div");
+            alertBox.className="custom-alert";
+            alertBox.innerText = msg;
+            document.body.appendChild(alertBox);
+            setTimeout(()=>alertBox.remove(),3000);
+        }
+    <\/script>
+
+    </body></html>
+    `;
+
+    newTab.document.write(html);
+    newTab.document.close();
+}
 
     document.getElementById("logout-btn").onclick = () => window.location.href = "/";
 </script>
