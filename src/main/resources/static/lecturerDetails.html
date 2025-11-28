@@ -226,14 +226,15 @@
             });
         });
     }
-
-   function showStudentDetailsInNewTab(section, subject, map2, map1, map) {
+function showStudentDetailsInNewTab(section, subject, map2, map1, map) {
     const newTab = window.open("", "_blank");
 
     let html = `
+    <!DOCTYPE html>
     <html>
     <head>
     <title>Students - ${section} (${subject})</title>
+
     <style>
         :root {
             --c1: rgb(255, 235, 178);
@@ -241,6 +242,7 @@
             --c3: rgb(216, 117, 199);
             --c4: rgb(145, 43, 188);
         }
+
         body {
             margin:0;
             padding:0;
@@ -261,35 +263,26 @@
         }
 
         .main-glass-card {
-           width:88%;
-           max-width:900px;
-           max-height:80vh;
-           background: rgba(255,255,255,0.14);
-           backdrop-filter: blur(18px);
-           border-radius:26px;
-           padding:30px;
-           overflow-y:auto;
-
-           /* Hide scrollbar (all browsers) */
-           -ms-overflow-style: none;   /* IE & Edge */
-           scrollbar-width: none;  /* Firefox */
-           scroll-behavior: smooth;
-
+            width:88%;
+            max-width:900px;
+            max-height:80vh;
+            background: rgba(255,255,255,0.14);
+            backdrop-filter: blur(18px);
+            border-radius:26px;
+            padding:30px;
+            overflow-y:scroll;
+            scrollbar-width:none;
+            -ms-overflow-style:none;
         }
 
-        .main-glass-card::-webkit-scrollbar {
-            display: none;   /* Chrome, Safari, Opera */
-        }
-
-
-        .student-item{
+        .student-item {
             margin-bottom:15px;
             padding:15px;
             background: rgba(255,255,255,0.14);
             border-radius:12px;
         }
 
-        .update-btn{
+        .update-btn, .add-btn {
             padding:12px 25px;
             border-radius:30px;
             border:none;
@@ -297,16 +290,10 @@
             color:white;
             font-weight:700;
             cursor:pointer;
-            transition:0.35s;
-            box-shadow:0 8px 25px rgba(145,43,188,0.45);
-        }
-        .update-btn:hover{
-            transform:translateY(-3px) scale(1.05);
-            box-shadow:0 0 20px white,0 0 40px var(--c4);
+            margin-top:10px;
         }
 
-        /* MODAL */
-        .modal-bg{
+        .modal-bg {
             position:fixed;
             inset:0;
             background:rgba(0,0,0,0.5);
@@ -316,7 +303,7 @@
             z-index:999;
         }
 
-        .modal-box{
+        .modal-box {
             width:320px;
             padding:25px;
             border-radius:20px;
@@ -325,15 +312,15 @@
             text-align:center;
         }
 
-        .modal-box input{
+        .modal-box input {
             width:100%;
             padding:12px;
             border-radius:12px;
             border:none;
-            margin-bottom:15px;
+            margin-bottom:12px;
         }
 
-        .btn{
+        .btn {
             padding:10px 18px;
             border:none;
             border-radius:12px;
@@ -342,7 +329,7 @@
             cursor:pointer;
         }
 
-        .custom-alert{
+        .custom-alert {
             position:fixed;
             bottom:30px;
             left:50%;
@@ -351,12 +338,10 @@
             border-radius:18px;
             background:linear-gradient(135deg,var(--c3),var(--c4));
             color:white;
-            box-shadow:0 0 20px var(--c4);
-            z-index:9999;
         }
-
     </style>
     </head>
+
     <body>
     <div class="main-glass-card">
     <h2>Students in ${section} - ${subject}</h2>
@@ -373,7 +358,6 @@
 
             const name = s[0];
             const roll = s[1];
-
             const marksObj = map[id]?.find(m => m[subject] !== undefined);
             const marks = marksObj ? marksObj[subject] : 'N/A';
 
@@ -386,21 +370,35 @@
                 <button class="update-btn" onclick="openUpdateModal(${id}, '${subject}', 'mark-${id}')">
                     Update Marks ✏️
                 </button>
-            </div>
-            `;
+            </div>`;
         });
     }
 
     html += `
+        <div style="text-align:center;margin:20px 0;">
+            <button class="add-btn" onclick="openAddStudentModal()">➕ Add New Student</button>
+        </div>
     </div>
 
-    <!-- MODAL -->
+    <!-- UPDATE MARKS MODAL -->
     <div class="modal-bg" id="modalBg">
         <div class="modal-box">
             <h3>Update Marks</h3>
             <input type="number" id="newMarkInput" placeholder="0 - 100">
             <button class="btn" onclick="saveMarks()">Save</button>
             <button class="btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- ADD STUDENT MODAL -->
+    <div class="modal-bg" id="addStudentModal">
+        <div class="modal-box">
+            <h3>Add New Student</h3>
+            <input type="text" id="newStudentName" placeholder="Student Name">
+            <input type="text" id="newStudentRoll" placeholder="Roll Number">
+            <input type="number" id="newStudentId" placeholder="Student ID">
+            <button class="btn" onclick="addNewStudent()">Add</button>
+            <button class="btn" onclick="closeAddModal()">Cancel</button>
         </div>
     </div>
 
@@ -418,16 +416,10 @@
 
         function closeModal(){
             document.getElementById("modalBg").style.display = "none";
-            document.getElementById("newMarkInput").value = "";
         }
 
         function saveMarks(){
             const newMarks = document.getElementById("newMarkInput").value;
-
-            if(isNaN(newMarks) || newMarks < 0 || newMarks > 100){
-                customAlert("Invalid Marks! (0-100 only)");
-                return;
-            }
 
             fetch("http://localhost:8080/api/student/update/marks", {
                 method: "PATCH",
@@ -438,32 +430,45 @@
                     subject: currentSubject
                 })
             })
-            .then(res => res.text())
-            .then(msg => {
-                customAlert(msg);
+            .then(() => {
                 document.getElementById(currentSpan).innerText = newMarks;
                 closeModal();
-            })
-            .catch(err => customAlert("Error: " + err));
+            });
         }
 
-        function customAlert(msg){
-            const alertBox = document.createElement("div");
-            alertBox.className="custom-alert";
-            alertBox.innerText = msg;
-            document.body.appendChild(alertBox);
-            setTimeout(()=>alertBox.remove(),3000);
+        function openAddStudentModal(){
+            document.getElementById("addStudentModal").style.display = "flex";
+        }
+
+        function closeAddModal(){
+            document.getElementById("addStudentModal").style.display = "none";
+        }
+
+        function addNewStudent(){
+            const name = document.getElementById("newStudentName").value;
+            const roll = document.getElementById("newStudentRoll").value;
+            const id = document.getElementById("newStudentId").value;
+
+            fetch("http://localhost:8080/api/student/add", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    studentId: Number(id),
+                    studentName: name,
+                    rollNumber: roll,
+                    section: "${section}"
+                })
+            })
+            .then(() => location.reload());
         }
     <\/script>
-
-    </body></html>
+    </body>
+    </html>
     `;
 
     newTab.document.write(html);
     newTab.document.close();
-
 }
-
     document.getElementById("logout-btn").onclick = () => window.location.href = "/";
 </script>
 
