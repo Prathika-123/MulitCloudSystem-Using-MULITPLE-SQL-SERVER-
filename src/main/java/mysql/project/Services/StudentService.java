@@ -49,23 +49,25 @@ public class StudentService {
     }
 
     public Student addStudent(AddStudentDto dto){
-        Student st=new Student();
-        st.setName(dto.getName());
-        st.setRollNo(dto.getRollNo());
-        st.setGender(dto.getGender());
-        st.setStudentClass(dto.getSection());
-        st.setEmail(dto.getEmail());
-        Student st2=studentRepository.save(st);
+        Student ref=studentRepository.findByRollNo(dto.getRollNo());
 
+        if(ref==null) {
+            Student st = new Student();
+            st.setName(dto.getName());
+            st.setRollNo(dto.getRollNo());
+            st.setGender(dto.getGender());
+            st.setStudentClass(dto.getSection());
+            st.setEmail(dto.getEmail());
+            ref = studentRepository.save(st);
+        }
         Marks mark=new Marks();
-        mark.setStudentId(st2.getStudentId());
+        mark.setStudentId(ref.getStudentId());
         mark.setSubject(dto.getSubject());
         mark.setMarks(dto.getMark());
         mark.setGrade(dto.getGrade());
 
         secondaryRentMarksRepository.save(mark);
-
-        return st2;
+        return ref;
     }
 
 }

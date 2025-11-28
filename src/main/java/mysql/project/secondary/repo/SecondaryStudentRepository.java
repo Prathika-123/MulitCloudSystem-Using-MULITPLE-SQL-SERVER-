@@ -16,4 +16,5 @@ public interface SecondaryStudentRepository extends JpaRepository<Student,Intege
 
     List<Student> findAllByStudentIdIn(Set<Integer> studentIds);
 
+    Student findByRollNo(String rollNo);
 }
