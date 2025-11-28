@@ -75,4 +75,10 @@ public class StudentController {
         return lecturerService.changeMarks(changeMark);
     }
 
+    @PostMapping("/add/student")
+    public ResponseEntity<?> addStudent(@RequestBody AddStudentDto addStudentDto){
+        Student saved=studentService.addStudent(addStudentDto);
+        return ResponseEntity.ok(saved);
+    }
+
 }

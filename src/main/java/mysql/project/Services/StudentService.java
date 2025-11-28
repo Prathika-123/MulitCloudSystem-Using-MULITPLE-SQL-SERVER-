@@ -1,6 +1,7 @@
 package mysql.project.Services;
 
 import lombok.NoArgsConstructor;
+import mysql.project.DTO.AddStudentDto;
 import mysql.project.DTO.LecturerDetails;
 import mysql.project.DTO.StudentInfo;
 import mysql.project.primaryEntity.Lecturer;
@@ -45,6 +46,26 @@ public class StudentService {
             studentInfo.setLecturers(primaryLecturerRepository.findBySection(st.getStudentClass()));
             return studentInfo;
 
+    }
+
+    public Student addStudent(AddStudentDto dto){
+        Student st=new Student();
+        st.setName(dto.getName());
+        st.setRollNo(dto.getRollNo());
+        st.setGender(dto.getGender());
+        st.setStudentClass(dto.getSection());
+        st.setEmail(dto.getEmail());
+        Student st2=studentRepository.save(st);
+
+        Marks mark=new Marks();
+        mark.setStudentId(st2.getStudentId());
+        mark.setSubject(dto.getSubject());
+        mark.setMarks(dto.getMark());
+        mark.setGrade(dto.getGrade());
+
+        secondaryRentMarksRepository.save(mark);
+
+        return st2;
     }
 
 }
